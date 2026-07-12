@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrock Flipbook Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --input-bg: #0f172a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --info: #3b82f6;
+            --info-hover: #2563eb;
+            --border: #334155;
+            --radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 2.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            flex: 1;
+            min-width: 320px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-large {
+            flex: 1.5;
+            min-width: 400px;
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Estilização moderna do Input de Arquivo */
+        input[type="file"] {
+            width: 100%;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            padding: 8px;
+            background: var(--input-bg);
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--accent);
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: var(--border);
+            color: var(--text-main);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 12px;
+            transition: background 0.2s ease;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: #475569;
+        }
+
+        /* Fundo checkerboard para o Canvas */
+        .canvas-container {
+            background-color: var(--input-bg);
+            background-image: 
+                linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b),
+                linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 75%, #1e293b 75%, #1e293b);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 160px;
+            margin-top: auto; /* Empurra para baixo */
+        }
+
+        canvas {
+            image-rendering: pixelated; 
+            width: 128px; 
+            height: 128px;
+        }
+
+        .status {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+            padding: 10px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            background-color: transparent;
+            color: var(--text-muted);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 16px;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-add { background-color: var(--accent); }
+        .btn-add:hover { background-color: var(--accent-hover); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        
+        .btn-clear { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); margin-top: 12px; }
+        .btn-clear:hover { background-color: rgba(239, 68, 68, 0.1); }
+
+        .btn-download { background-color: var(--info); margin-top: auto; }
+        .btn-download:hover { background-color: var(--info-hover); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+
+        .table-container {
+            flex-grow: 1;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            margin-bottom: 16px;
+        }
+
+        .table-container::-webkit-scrollbar { width: 8px; }
+        .table-container::-webkit-scrollbar-track { background: var(--input-bg); }
+        .table-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #0f172ab3; /* Transparente com blur nativo abaixo */
+            backdrop-filter: blur(4px);
+            position: sticky;
+            top: 0;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            z-index: 10;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--danger);
+            border: none;
+            cursor: pointer;
+            padding: 4px 8px;
+            margin: 0;
+            font-weight: 600;
+            font-size: 0.85rem;
+            width: auto;
+            border-radius: 4px;
+        }
+        .btn-delete:hover { background-color: rgba(239, 68, 68, 0.1); }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #a9b7c6;
+            padding: 14px;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--info);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Bedrock Flipbook Generator</h1>
+        <p class="subtitle">Importe, valide e compile suas animações de textura com facilidade.</p>
+    </div>
+    
+    <div class="container">
+        <div class="panel">
+            <h3>⚙️ Configurar Textura</h3>
+            
+            <div class="form-group">
+                <label for="imageInput">Imagem (.png vertical)</label>
+                <input type="file" id="imageInput" accept="image/png">
+            </div>
+            <div class="form-group">
+                <label for="mcmetaInput">Arquivo .mcmeta</label>
+                <input type="file" id="mcmetaInput" accept=".mcmeta,.json">
+            </div>
+            
+            <div style="display: flex; gap: 12px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="atlasTile">Nome no Atlas</label>
+                    <input type="text" id="atlasTile" placeholder="ex: fogo">
+                </div>
+                <div class="form-group" style="flex: 2;">
+                    <label for="texturePath">Caminho no Bedrock</label>
+                    <input type="text" id="texturaPath" placeholder="ex: textures/blocks/fogo">
+                </div>
+            </div>
+
+            <button id="addToPackBtn" class="btn-add">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Adicionar ao Pacote
+            </button>
+            
+            <div class="status" id="statusText">Aguardando arquivos...</div>
+
+            <div class="canvas-container">
+                <canvas id="animCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="panel panel-large">
+            <h3>📦 Pacote Bedrock (flipbook_textures.json)</h3>
+            
+            <div class="table-container">
+                <table id="packTable">
+                    <thead>
+                        <tr>
+                            <th>Atlas Tile</th>
+                            <th>Caminho (Path)</th>
+                            <th>Frames</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="emptyRow"><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhuma textura adicionada ainda.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <textarea id="bedrockOutput" readonly spellcheck="false" placeholder="// O código JSON final compilado aparecerá aqui..."></textarea>
+            
+            <button id="downloadBtn" class="btn-download">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Baixar JSON Gerado
+            </button>
+            <button id="clearPackBtn" class="btn-clear">🗑️ Limpar Tudo</button>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const mcmetaInput = document.getElementById('mcmetaInput');
+        const animCanvas = document.getElementById('animCanvas');
+        const ctx = animCanvas.getContext('2d');
+        const statusText = document.getElementById('statusText');
+        const texturePathInput = document.getElementById('texturaPath');
+        const atlasTileInput = document.getElementById('atlasTile');
+        const addToPackBtn = document.getElementById('addToPackBtn');
+        const bedrockOutput = document.getElementById('bedrockOutput');
+        const packTableBody = document.querySelector('#packTable tbody');
+        const clearPackBtn = document.getElementById('clearPackBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let spriteImage = new Image();
+        let mcmetaData = null;
+        let animationSequence = [];
+        let currentFrameIndex = 0;
+        let timeoutId = null;
+
+        let cleanedImageName = "";
+        let cleanedMcmetaName = "";
+
+        let flipbookPack = [];
+
+        function getCoreTextureName(filename) {
+            return filename.trim().toLowerCase()
+                           .replace(/\.mcmeta$/i, '')
+                           .replace(/\.json$/i, '')
+                           .replace(/\.png$/i, ''); 
+        }
+
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            cleanedImageName = getCoreTextureName(file.name);
+
+            const simpleName = file.name.replace(/\.[^/.]+$/, ""); 
+            texturePathInput.value = `textures/blocks/${simpleName}`;
+            atlasTileInput.value = simpleName;
+
+            const reader = new FileReader();
+            reader.onload = (event) => { spriteImage.src = event.target.result; };
+            reader.readAsDataURL(file);
+        });
+
+        spriteImage.onload = () => { checkAndPreview(); };
+
+        mcmetaInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            cleanedMcmetaName = getCoreTextureName(file.name);
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    mcmetaData = JSON.parse(event.target.result);
+                    checkAndPreview();
+                } catch (err) {
+                    alert('MCMETA inválido! Certifique-se de que é um arquivo JSON sem erros.');
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function checkAndPreview() {
+            if (spriteImage.src && mcmetaData) {
+                
+                if (cleanedImageName !== cleanedMcmetaName) {
+                    statusText.innerText = `❌ Erro: Arquivos incompatíveis! ("${cleanedImageName}" ≠ "${cleanedMcmetaName}")`;
+                    statusText.style.color = "var(--danger)";
+                    statusText.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+                    
+                    clearTimeout(timeoutId);
+                    ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+                    return; 
+                }
+
+                statusText.innerText = `✓ Compatível: "${cleanedImageName}". Pronto para salvar.`;
+                statusText.style.color = "var(--accent)";
+                statusText.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+                
+                clearTimeout(timeoutId);
+                const frameSize = spriteImage.width;
+                const totalPhysicalFrames = spriteImage.height / frameSize;
+                animCanvas.width = frameSize;
+                animCanvas.height = frameSize;
+
+                animationSequence = [];
+                const anim = mcmetaData.animation || {};
+                const defaultTickTime = anim.frametime || 1;
+
+                if (anim.frames && Array.isArray(anim.frames)) {
+                    anim.frames.forEach(frame => {
+                        if (typeof frame === 'number') {
+                            animationSequence.push({ index: frame, ticks: defaultTickTime });
+                        } else if (typeof frame === 'object') {
+                            animationSequence.push({ 
+                                index: frame.index, 
+                                ticks: frame.time !== undefined ? frame.time : defaultTickTime 
+                            });
+                        }
+                    });
+                } else {
+                    for (let i = 0; i < totalPhysicalFrames; i++) {
+                        animationSequence.push({ index: i, ticks: defaultTickTime });
+                    }
+                }
+                currentFrameIndex = 0;
+                playFrame();
+            }
+        }
+
+        function playFrame() {
+            if (animationSequence.length === 0) return;
+            const frameData = animationSequence[currentFrameIndex];
+            const sourceY = frameData.index * spriteImage.width;
+
+            ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+            ctx.drawImage(spriteImage, 0, sourceY, spriteImage.width, spriteImage.width, 0, 0, animCanvas.width, animCanvas.height);
+
+            const delay = frameData.ticks * 50;
+            currentFrameIndex = (currentFrameIndex + 1) % animationSequence.length;
+            timeoutId = setTimeout(playFrame, delay);
+        }
+
+        addToPackBtn.addEventListener('click', () => {
+            if (animationSequence.length === 0 || !mcmetaData) {
+                alert("Por favor, carregue uma Imagem e um MCMETA válidos primeiro!");
+                return;
+            }
+
+            if (cleanedImageName !== cleanedMcmetaName) {
+                alert(`Envio Bloqueado!\n\nOs arquivos não pertencem à mesma animação.\n- Imagem: ${cleanedImageName}.png\n- MCMETA: ${cleanedMcmetaName}.mcmeta`);
+                return;
+            }
+
+            if (!texturePathInput.value.trim() || !atlasTileInput.value.trim()) {
+                alert("Por favor, preencha os campos de identificação do Bedrock!");
+                return;
+            }
+
+            let isUniformTime = true;
+            let baseTicks = animationSequence[0].ticks;
+            for (let frame of animationSequence) {
+                if (frame.ticks !== baseTicks) { isUniformTime = false; break; }
+            }
+
+            let bedrockFrames = [];
+            let ticksPerFrame = isUniformTime ? baseTicks : 1;
+
+            for (let frame of animationSequence) {
+                if (isUniformTime) {
+                    bedrockFrames.push(frame.index);
+                } else {
+                    for (let i = 0; i < frame.ticks; i++) { bedrockFrames.push(frame.index); }
+                }
+            }
+
+            const isInterpolated = (mcmetaData.animation && mcmetaData.animation.interpolate === true);
+
+            const bedrockEntry = {
+                flipbook_texture: texturePathInput.value.trim(),
+                atlas_tile: atlasTileInput.value.trim(),
+                ticks_per_frame: ticksPerFrame,
+                frames: bedrockFrames,
+                blend_frames: isInterpolated
+            };
+
+            flipbookPack.push(bedrockEntry);
+            renderPack();
+            resetInputs();
+        });
+
+        function renderPack() {
+            packTableBody.innerHTML = "";
+
+            if (flipbookPack.length === 0) {
+                packTableBody.innerHTML = `<tr id="emptyRow"><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhuma textura adicionada ainda.</td></tr>`;
+                bedrockOutput.value = "";
+                return;
+            }
+
+            flipbookPack.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${entry.atlas_tile}</strong></td>
+                    <td style="color: var(--text-muted);">${entry.flipbook_texture}</td>
+                    <td><span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${entry.frames.length} frames</span></td>
+                    <td><button class="btn-delete" onclick="removeItem(${index})">Remover</button></td>
+                `;
+                packTableBody.appendChild(tr);
+            });
+
+            bedrockOutput.value = JSON.stringify(flipbookPack, null, 4);
+        }
+
+        window.removeItem = function(index) {
+            flipbookPack.splice(index, 1);
+            renderPack();
+        };
+
+        function resetInputs() {
+            imageInput.value = "";
+            mcmetaInput.value = "";
+            texturePathInput.value = "";
+            atlasTileInput.value = "";
+            mcmetaData = null;
+            animationSequence = [];
+            cleanedImageName = "";
+            cleanedMcmetaName = "";
+            clearTimeout(timeoutId);
+            ctx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+            statusText.innerText = "Textura salva! Pronto para a próxima...";
+            statusText.style.color = "var(--text-muted)";
+            statusText.style.backgroundColor = "transparent";
+        }
+
+        clearPackBtn.addEventListener('click', () => {
+            if (confirm("Tem certeza que deseja limpar todas as animações salvas?")) {
+                flipbookPack = [];
+                renderPack();
+            }
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (flipbookPack.length === 0) {
+                alert("O seu pacote está vazio!");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(flipbookPack, null, 4));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "flipbook_textures.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+    </script>
+</body>
+</html>
