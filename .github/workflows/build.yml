@@ -1,8 +1,10 @@
 name: Converter HTML para APK
 
 on:
-    workflow_dispatch:
-    
+  push:
+    branches:
+      - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -11,7 +13,12 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # Correção do bug: Cria uma pasta separada e joga o index.html nela
+      # Correção: Instala a versão correta do Node.js exigida pelo Capacitor
+      - name: Configurar Node.js (Versão 22)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Organizar arquivos para o Build
         run: |
           mkdir pasta_app
@@ -20,8 +27,8 @@ jobs:
       - name: Criar APK a partir do HTML
         uses: darkshredder/web-to-app-action@main
         with:
-          build-folder-path: "pasta_app"   # Agora ele lê a pasta isolada sem dar loop
-          app-name: "MeuApp"               # Digite aqui o nome do seu aplicativo
+          build-folder-path: "pasta_app"
+          app-name: "MeuApp"
           output-folder-path: "output"
 
       - name: Disponibilizar APK para Download
