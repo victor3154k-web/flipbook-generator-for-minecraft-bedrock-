@@ -13,23 +13,47 @@ jobs:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # Correção: Instala a versão correta do Node.js exigida pelo Capacitor
+      - name: Configurar Java (Necessário para o Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Configurar Node.js (Versão 22)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      - name: Organizar arquivos para o Build
+      - name: Criar Projeto Android Nativo
         run: |
-          mkdir pasta_app
-          cp index.html pasta_app/
-
-      - name: Criar APK a partir do HTML
-        uses: darkshredder/web-to-app-action@main
-        with:
-          build-folder-path: "pasta_app"
-          app-name: "MeuApp"
-          output-folder-path: "output"
+          # 1. Cria a pasta e inicializa o projeto node
+          mkdir android-project && cd android-project
+          npm init -y
+          
+          # 2. Instala o Capacitor Oficial
+          npm install @capacitor/core @capacitor/cli
+          
+          # 3. Inicializa o Capacitor (Mude o nome do app e ID se quiser)
+          npx cap init "MeuApp" "com.meuapp.html" --web-dir=www
+          
+          # 4. Instala a plataforma Android
+          npm install @capacitor/android
+          npx cap add android
+          
+          # 5. Move o seu index.html para dentro da pasta do App
+          mkdir -p www
+          cp ../index.html www/index.html
+          
+          # 6. Sincroniza o código HTML com a pasta do Android
+          npx cap sync
+          
+          # 7. Compila o arquivo APK final usando o Gradle do Android
+          cd android
+          ./gradlew assembleDebug
+          
+          # 8. Move o APK gerado para uma pasta fácil de encontrar
+          mkdir -p ../../output
+          cp app/build/outputs/apk/debug/app-debug.apk ../../output/meu-aplicativo.apk
 
       - name: Disponibilizar APK para Download
         uses: actions/upload-artifact@v4
